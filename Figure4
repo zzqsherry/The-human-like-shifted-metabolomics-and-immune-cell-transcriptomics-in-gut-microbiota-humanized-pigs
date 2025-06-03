@@ -1,0 +1,460 @@
+Figure4 B
+/public/software/anaconda3/bin/R
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(cowplot)
+load("2015-delred-rename.Rdata")
+setwd("/public2/10xgenomic/PIG_colon/result/pbmc-2/20221226_pbmc")
+pbmcpc1.data <- Read10X(data.dir = "/public2/10xgenomic/PIG_colon/result/pbmc-2/pig/pbmcc1")
+pbmcpc2.data <- Read10X(data.dir = "/public2/10xgenomic/PIG_colon/result/pbmc-2/pig/pbmcc2")
+pbmcpt1.data <- Read10X(data.dir = "/public2/10xgenomic/PIG_colon/result/pbmc-2/pig/pbmct1")
+pbmcpt2.data <- Read10X(data.dir = "/public2/10xgenomic/PIG_colon/result/pbmc-2/pig/pbmct2")
+pbmch1.data <- Read10X(data.dir = "/public2/10xgenomic/PIG_colon/result/pbmc-2/human/pbmc1")
+pbmch2.data <- Read10X(data.dir = "/public2/10xgenomic/PIG_colon/result/pbmc-2/human/pbmc2")
+
+pbmcpc1 <- CreateSeuratObject(counts = pbmcpc1.data, project = "pig_con1", min.cells = 3, min.features = 200)
+pbmcpc2 <- CreateSeuratObject(counts = pbmcpc2.data, project = "pig_con2", min.cells = 3, min.features = 200)
+pbmcpt1 <- CreateSeuratObject(counts = pbmcpt1.data, project = "pig_t1", min.cells = 3, min.features = 200)
+pbmcpt2 <- CreateSeuratObject(counts = pbmcpt2.data, project = "pig_t2", min.cells = 3, min.features = 200)
+pbmch1 <- CreateSeuratObject(counts = pbmch1.data, project = "human1", min.cells = 3, min.features = 200)
+pbmch2 <- CreateSeuratObject(counts = pbmch2.data, project = "human2", min.cells = 3, min.features = 200)
+
+pbmcpc1
+pbmcpc2
+pbmcpt1
+pbmcpt2
+pbmch1
+pbmch2
+> 
+> pbmcpc1
+An object of class Seurat 
+12476 features across 8897 samples within 1 assay 
+Active assay: RNA (12476 features, 0 variable features)
+> pbmcpc2
+An object of class Seurat 
+12609 features across 11505 samples within 1 assay 
+Active assay: RNA (12609 features, 0 variable features)
+> pbmcpt1
+An object of class Seurat 
+12258 features across 6735 samples within 1 assay 
+Active assay: RNA (12258 features, 0 variable features)
+> pbmcpt2
+An object of class Seurat 
+12466 features across 9102 samples within 1 assay 
+Active assay: RNA (12466 features, 0 variable features)
+> pbmch1
+An object of class Seurat 
+18569 features across 9744 samples within 1 assay 
+Active assay: RNA (18289 features, 0 variable features)
+> pbmch2
+An object of class Seurat 
+18569 features across 14346 samples within 1 assay 
+Active assay: RNA (18569 features, 0 variable features)
+######################
+
+pbmcpc1[["percent.mt"]] <- PercentageFeatureSet(pbmcpc1, pattern = "^MT-")
+pbmcpc2[["percent.mt"]] <- PercentageFeatureSet(pbmcpc2, pattern = "^MT-")
+pbmcpt1[["percent.mt"]] <- PercentageFeatureSet(pbmcpt1, pattern = "^MT-")
+pbmcpt2[["percent.mt"]] <- PercentageFeatureSet(pbmcpt2, pattern = "^MT-")
+pbmch1[["percent.mt"]] <- PercentageFeatureSet(pbmch1, pattern = "^MT-")
+pbmch2[["percent.mt"]] <- PercentageFeatureSet(pbmch2, pattern = "^MT-")
+
+pbmcpc1[["percent.ribo"]] <- PercentageFeatureSet(pbmcpc1, pattern = "^RP[SL]")
+pbmcpc2[["percent.ribo"]] <- PercentageFeatureSet(pbmcpc2, pattern = "^RP[SL]")
+pbmcpt1[["percent.ribo"]] <- PercentageFeatureSet(pbmcpt1, pattern = "^RP[SL]")
+pbmcpt2[["percent.ribo"]] <- PercentageFeatureSet(pbmcpt2, pattern = "^RP[SL]")
+pbmch1[["percent.ribo"]] <- PercentageFeatureSet(pbmch1, pattern = "^RP[SL]")
+pbmch2[["percent.ribo"]] <- PercentageFeatureSet(pbmch2, pattern = "^RP[SL]")
+
+
+rb.genes <- rownames(pbmcpc1)[grep("^RP[SL]",rownames(pbmcpc1))]
+C<-GetAssayData(object = pbmcpc1, slot = "counts")
+percent.ribo <- Matrix::colSums(C[rb.genes,])/Matrix::colSums(C)*100
+pbmcpc1 <- AddMetaData(pbmcpc1, percent.ribo, col.name = "percent.ribo")
+
+
+
+
+pbmc_all<-list(pbmcpc1,pbmcpc2,pbmcpt1,pbmcpt2,pbmch1,pbmch2)
+
+
+pdf(file="0VlnPlot_qc_pbmcpc1.pdf",width=12,height=10)
+VlnPlot(pbmcpc1, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+pdf(file="0VlnPlot_qc_pbmcpc2.pdf",width=12,height=10)
+VlnPlot(pbmcpc2, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+pdf(file="0VlnPlot_qc_pbmcpt2.pdf",width=12,height=10)
+VlnPlot(pbmcpt2, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+pdf(file="0VlnPlot_qc_pbmcpt1.pdf",width=12,height=10)
+VlnPlot(pbmcpt1, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+pdf(file="0VlnPlot_qc_pbmch1.pdf",width=12,height=10)
+VlnPlot(pbmch1, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+pdf(file="0VlnPlot_qc_pbmch2.pdf",width=12,height=10)
+VlnPlot(pbmch2, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+#nFeature_RNA/nCount_RNA不能太小（空液滴），不能太大（doublet、测序技术限制）， 而且阈值设定要综合多个样本来看，像下面这样
+
+pbmcpc1 <- subset(pbmcpc1, subset = nFeature_RNA > 200 & nFeature_RNA < 3000  &percent.mt < 20 & nCount_RNA > 500& nCount_RNA < 15000)
+pbmcpc2 <- subset(pbmcpc2, subset = nFeature_RNA > 200 & nFeature_RNA < 3000 &percent.mt < 20 & nCount_RNA > 500 & nCount_RNA < 15000)
+
+pbmcpt1 <- subset(pbmcpt1, subset = nFeature_RNA > 200 & nFeature_RNA < 3000  &percent.mt < 20 & nCount_RNA > 500& nCount_RNA < 15000)
+pbmcpt2 <- subset(pbmcpt2, subset = nFeature_RNA > 200 & nFeature_RNA < 3000 &percent.mt < 20 & nCount_RNA > 500 & nCount_RNA < 15000)
+
+pbmch1 <- subset(pbmch1, subset = nFeature_RNA > 200 & nFeature_RNA < 3000  &percent.mt < 20 & nCount_RNA > 500& nCount_RNA < 15000)
+pbmch2 <- subset(pbmch2, subset = nFeature_RNA > 200 & nFeature_RNA < 3000 &percent.mt < 20 & nCount_RNA > 500 & nCount_RNA < 15000 )
+@##################
+
+
+ifnb.list<-list(pbmcpc1,pbmcpc2,pbmcpt1,pbmcpt2,pbmch1,pbmch2)
+
+ifnb_nor.list <- lapply(X = ifnb.list, FUN = function(x) {
+    x <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
+    x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+})
+
+# select features that are repeatedly variable across datasets for integration
+features <- SelectIntegrationFeatures(object.list = ifnb_nor.list)
+
+immune.anchors <- FindIntegrationAnchors(object.list = ifnb_nor.list, anchor.features = features)
+
+# this command creates an 'integrated' data assay
+immune.combined <- IntegrateData(anchorset = immune.anchors)
+#过滤后质量
+pdf(file="0VlnPlot_qc_immune.combined.pdf",width=24,height=20)
+VlnPlot(immune.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+##########
+save.image('pbmc-qc.Rdata')
+#####################################3
+
+# specify that we will perform downstream analysis on the corrected data note that the
+# original unmodified data still resides in the 'RNA' assay
+DefaultAssay(immune.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+immune.combined <- RunPCA(immune.combined, npcs = 20, verbose = FALSE)
+immune.combined<- RunUMAP(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindClusters(immune.combined, resolution = 1)
+
+
+
+###DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident" )
+#pdf(file="1umap_combined.pdf",width=12,height=5)
+ 
+jpeg(file = "1umap_combined.jpg", width = 12, height =5, units = "in", res = 500)
+
+jpeg(file = "000000umap_combined.jpg", width = 12, height =5, units = "in", res = 500)
+
+p1 <- DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident")
+p2 <- DimPlot(immune.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 + p2
+dev.off()
+
+#######
+#pdf(file="1umap_combined_spli.pdf",width=18,height=5)
+ 
+jpeg(file = "1umap_combined_spli.jpg", width = 18, height =5, units = "in", res = 500)
+
+DimPlot(immune.combined, reduction = "umap", split.by = "orig.ident")
+dev.off()
+
+#############
+immune.combined
+
+
+immune.combined$group<-paste0(immune.combined$orig.ident,'_',immune.combined$seurat_clusters)
+cell.prop<-as.data.frame( prop.table(table(immune.combined$group)))
+cell.prop
+> immune.combined（复制：ctrl+insert）
+An object of class Seurat
+24773 features across 57325 samples within 2 assays
+Active assay: integrated (2000 features, 2000 variable features)
+ 1 other assay present: RNA
+ 2 dimensional reductions calculated: pca, umap
+
+write.csv(cell.prop,file="cell-prop-20-1prop.csv",row.names = F)
+统计每群细胞数
+table(Idents(immune.combined))
+
+
+统计每种细胞数
+count<-table(immune.combined$orig.ident)
+
+write.csv(count,file="count-20-1prop.csv",row.names = F)
+##############
+
+
+# find markers for every cluster compared to all remaining cells, report only the positive
+
+immune.combined.markers <- FindAllMarkers(immune.combined, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_logFC)
+
+write.csv(immune.combined.markers,file="pbmc-20-1.markers.csv",row.names = F)
+###############3
+####################
+##########
+save.image('pbmc-20-1.Rdata')
+#####################################3
+###################合并分组
+table(immune.combined$orig.ident)
+table(immune.combined$gruop)
+immune.combined$gruop <- "Human"#先把所有的都加一列是人后面再把是猪的替换成猪
+immune.combined@meta.data[immune.combined@meta.data$orig.ident %in% c("pig_con1","pig_con2"),"gruop"] <- "Pig_con"
+immune.combined@meta.data[immune.combined@meta.data$orig.ident %in% c("pig_t1","pig_t2"),"gruop"] <- "Pig_t"
+#immune.combined@meta.data[immune.combined@meta.data$orig.ident %in% c("human1","human2"),"gruop"] <- "human"#就不需要再做替换人的了
+
+
+
+Figure4 C
+####################spli三组
+
+jpeg(file = "1pro_gene_cloud_2009_SPLI3.jpg", width = 15, height =40, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("IL7R", "CCR7", "CD14","LYZ","S100A4","MS4A1", "CD8A", "CD4","FCGR3A","MS4A7","GNLY", "NKG7", "FCER1A", "CST3","Ptprc","Cd34", "PPBP", "CD3G", "CD19","GZMK","GZMA","GATA2","CD3E","CD2","CD3D","TRDC"), min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), split.by = "gruop", reduction = "umap")
+dev.off()
+
+
+#######
+#pdf(file="1umap_combined_spli.pdf",width=18,height=4)
+ 
+jpeg(file = "1umap_combined_spli2group.jpg", width =10, height =4, units = "in", res = 500)
+
+DimPlot(immune.combined, reduction = "umap", split.by = "gruop")
+dev.off()
+
+#######
+#pdf(file="1umap_combined_spli.pdf",width=18,height=5)
+ 
+jpeg(file = "1umap_combined_spli.jpg", width = 18, height =5, units = "in", res = 500)
+
+DimPlot(immune.combined, reduction = "umap", split.by = "orig.ident")
+dev.off()
+
+
+
+pdf(file="1pro_gene_cloud.pdf",width=10,height=20)
+
+jpeg(file = "1pro_gene_cloud.jpg", width = 12, height =15, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("IL7R", "CCR7", "CD14","LYZ","S100A4","MS4A1", "CD8A", "CD4","FCGR3A","MS4A7","GNLY", "NKG7", "FCER1A", "CST3","CD3E","PTPRC", "PPBP", "HBB", "CD3G", "CD19","GZMK","GZMA","GATA2"), min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), reduction = "umap")
+dev.off()
+
+, split.by = "orig.ident"
+################################################
+
+
+
+去掉红细胞，血小板，非cd45的 23 14  20  21 
+
+rds<-subset(immune.combined,idents=c('14','20','21','23'), invert = TRUE)
+
+############
+
+DefaultAssay(rds) <- "RNA"
+ifnb.list <- SplitObject(rds, split.by ="orig.ident")
+
+
+ifnb.list <- lapply(X = ifnb.list, FUN = function(x) {
+    x <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
+    x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+})
+
+features <- SelectIntegrationFeatures(object.list = ifnb.list)
+
+immune.anchors <- FindIntegrationAnchors(object.list = ifnb.list, anchor.features = features)
+
+######后续和前面分群一样了
+# this command creates an 'integrated' data assay
+immune.combined <- IntegrateData(anchorset = immune.anchors)
+#过滤后质量
+#pdf(file="2VlnPlot_qc_DEL1.pdf",width=10,height=5)
+#VlnPlot(immune.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+#dev.off()
+
+pdf(file="2VlnPlot_qc_pbmch2.pdf",width=12,height=10)
+VlnPlot(immune.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+
+# specify that we will perform downstream analysis on the corrected data note that the
+# original unmodified data still resides in the 'RNA' assay
+DefaultAssay(immune.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+immune.combined <- RunPCA(immune.combined, npcs =20, verbose = FALSE)
+immune.combined<- RunUMAP(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindClusters(immune.combined, resolution = 1.5)
+
+##################分群
+####DimPlot(2-delred-immuecombined-20-1, reduction = "umap", group.by = "orig.ident" )
+pdf(file="2umap_combinedDELred20-1.pdf",width=12,height=5)
+ jpeg(file = "2umap_combinedDELred20-1.jpg", width = 12, height =5, units = "in", res = 500)
+p1 <- DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident")
+p2 <- DimPlot(immune.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 + p2
+dev.off()
+
+
+pdf(file="2umap_combinedDELred20-1_spli.pdf",width=15,height=5)
+
+ jpeg(file = "2umap_combinedDELred20-1_spli.jpg", width = 15, height =5, units = "in", res = 500)
+DimPlot(immune.combined, reduction = "umap", split.by = "orig.ident")
+dev.off()
+
+
+jpeg(file = "2umap_combinedDELred20-1_spligruop.jpg", width = 15, height =5, units = "in", res = 500)
+DimPlot(immune.combined, reduction = "umap", split.by = "gruop")
+dev.off()
+
+
+###########################################
+#细胞数
+
+immune.combined$group<-paste0(immune.combined$orig.ident,'_',immune.combined$seurat_clusters)
+cell.prop<-as.data.frame( prop.table(table(immune.combined$group)))
+cell.prop
+
+write.csv(cell.prop,file="cell-filiter-prop-20-1prop.csv",row.names = F)
+
+统计每群细胞数
+table(Idents(immune.combined))
+
+
+统计每种细胞数
+count<-table(immune.combined$orig.ident)
+
+write.csv(count,file="count-filter-20-1prop.csv",row.names = F)
+##############
+
+> 
+##############################################
+#####################################3
+pdf(file="1pro_gene_cloud.pdf",width=10,height=20)
+
+jpeg(file = "2pro_gene_cloud_filiter.jpg", width = 15, height =24, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("IL7R", "CCR7", "CD14","LYZ","S100A4","MS4A1", "CD8A", "CD4","FCGR3","MS4A7","GNLY", "NKG7", "FCER1A", "CST3","CD68","Cd34", "PPBP", "CD3G", "CD19","GZMK","GZMA","GATA2","CD3E","CD2","CD3D","TRDC","PRF1","GNLY"), min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), reduction = "umap")
+dev.off()
+
+jpeg(file = "2pro_FCGR3A_cloud_filiter.jpg", width = 5, height =4, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("FCGR3A"), max.cutoff = 2, min.cutoff = 0,
+    cols = c("grey", "red"))
+dev.off()
+
+, split.by = "orig.ident"
+
+
+jpeg(file = "2pro_gene_cloud_SPLI.jpg", width = 15, height =40, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("IL7R", "CCR7", "CD14","LYZ","S100A4","MS4A1", "CD8A", "CD4","FCGR3A","MS4A7","GNLY", "NKG7", "FCER1A", "CST3","Ptprc","Cd34", "PPBP", "CD3G", "CD19","GZMK","GZMA","GATA2","CD3E","CD2","CD3D","TRDC"), min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), split.by = "orig.ident", reduction = "umap")
+dev.off()
+
+
+####################
+
+# find markers for every cluster compared to all remaining cells, report only the positive
+
+immune.combined.markers <- FindAllMarkers(immune.combined, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_logFC)
+
+write.csv(immune.combined.markers,file="pbmc-filiterred-20-1.markers.csv",row.names = F)
+
+##########
+save.image('pbmc-DELRED-20-15.Rdata')
+
+#############33333RENAME
+
+new.cluster.ids <- c("T","T","T","NK", "NK", "T","NK", "T","B", "T","B", "CD14MO","T", "NK", "CD14MO", "T", "B", "T","T","T", "CD14MO","T","NK","CD14MO","CD16MO","DC", "CD14MO","T","T","B","DC")
+
+names(new.cluster.ids) <- levels(immune.combined)
+immune.combined <- RenameIdents(immune.combined, new.cluster.ids)
+
+jpeg(file = "3umap_RENAME_CLUSTER_nolable.jpg", width = 5, height =4, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = FALSE,cols = cell_type_cols,combine = TRUE,  pt.size = 0.5) + NoLegend()
+dev.off()
+
+jpeg(file = "3umap_RENAME_CLUSTER_lable.jpg", width = 5, height =4, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = TRUE,cols = cell_type_cols,combine = TRUE,  pt.size = 0.5) + NoLegend()
+dev.off()
+
+
+jpeg(file = "3umap_RENAME_CLUSTER_spli_nolable.jpg", width = 10, height =4, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = FALSE,combine = TRUE,cols = cell_type_cols,  pt.size = 0.5, split.by = "gruop") + NoLegend()
+dev.off()
+
+
+# find markers for every cluster compared to all remaining cells, report only the positive
+
+immune.combined.markers <- FindAllMarkers(immune.combined, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_logFC)
+
+write.csv(immune.combined.markers,file="RENAME.markers.csv",row.names = F)
+
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_logFC) -> top10
+###########设置顺序#######################
+immune.combined$gruop<-factor(immune.combined$gruop,levels=c('Human','Pig_con','Pig_t'))
+###########设置顺序#######################
+#保存pdf，做这个的时候保存jpg有问题
+pdf(file="3-2markergene_allheatmap.pdf",width=7,height=7)
+#DoHeatmap(immune.combined, features = c("CD3E", "CD4", "CD8A", "CCR7", "LEF1", "TCF7", "GZMA", "PRF1", "GNLY", "NKG7", "TRDC", "CD79A", "CD19", "LYZ", "FCGR3A", "FCER1A", "CD1C", "CST3"))  + NoLegend()
+DoHeatmap(immune.combined, features = top10$gene) + scale_fill_gradientn(colors = c("blue", "white", "red")) + NoLegend()
+
+dev.off()
+
+
++ scale_fill_gradientn(colors = c("blue", "white", "red"))
+
+
+Figure4 D
+#####################################3
+###################合并分组,做dotplot，排序是一定的所以需要abc命名
+table(immune.combined$orig.ident)
+table(immune.combined$gruop)
+table(immune.combined$gruop2)
+
+immune.combined$gruop2 <- "A"#先把所有的都加一列是人后面再把是猪的替换成猪
+immune.combined@meta.data[immune.combined@meta.data$orig.ident %in% c("pig_con1","pig_con2"),"gruop2"] <- "B"
+immune.combined@meta.data[immune.combined@meta.data$orig.ident %in% c("pig_t1","pig_t2"),"gruop2"] <- "C"
+#immune.combined@meta.data[immune.combined@meta.data$orig.ident %in% c("human1","human2"),"gruop"] <- "human"#就不需要再做替换人的了
+#####################################3
+
+
+
+jpeg(file = "3doTPLOT_top10_col.jpg", width = 14, height =6, units = "in", res = 500)
+DotPlot(object = immune.combined, features = c("CD3E", "CD4", "CD8A", "CCR7", "LEF1", "TCF7", "GZMA", "PRF1", "GNLY", "NKG7", "TRDC", "CD79A", "CD19", "LYZ", "FCGR3A", "FCER1A", "CD1C", "CST3"), split.by = 'gruop2',cols = c("red" , "blue", "purple"))
+dev.off()
+
+save.image('2015-delred-rename.Rdata')
+
+提取top10的基因表达量
+table<- immune.combined@assays$RNA[top10$gene,WhichCells(immune.combined)]
+write.csv(table,file="table.csv",row.names = T)
+############
+jpeg(file = "3VLN_top10_col.jpg", width = 24, height =46, units = "in", res = 500)
+VlnPlot(immune.combined, features = top10$gene)
+dev.off()
+
+
+
+
+
+
+
