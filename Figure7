@@ -1,0 +1,268 @@
+Figure7 A-B
+/public/software/anaconda3/bin/R
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(cowplot)
+load("pbmc-B-201-RENAME.Rdata")
+
+setwd("/public2/10xgenomic/PIG_colon/result/pbmc-2/20221226_pbmc/20230518B")
+
+###########提取B细胞
+rds<-subset(immune.combined,idents=c('B'))
+
+
+################
+DefaultAssay(rds) <- "RNA"
+ifnb.list <- SplitObject(rds, split.by ="orig.ident")
+
+
+ifnb.list <- lapply(X = ifnb.list, FUN = function(x) {
+    x <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
+    x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+})
+
+features <- SelectIntegrationFeatures(object.list = ifnb.list)
+
+immune.anchors <- FindIntegrationAnchors(object.list = ifnb.list, anchor.features = features)
+################
+
+######后续和前面分群一样了
+# this command creates an 'integrated' data assay
+immune.combined <- IntegrateData(anchorset = immune.anchors)
+#过滤后质量
+pdf(file="B-VlnPlot_qc.pdf",width=10,height=5)
+VlnPlot(immune.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+dev.off()
+
+# specify that we will perform downstream analysis on the corrected data note that the
+# original unmodified data still resides in the 'RNA' assay
+DefaultAssay(immune.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+immune.combined <- RunPCA(immune.combined, npcs =20, verbose = FALSE)
+immune.combined<- RunUMAP(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindClusters(immune.combined, resolution = 1)
+
+##################分群
+####DimPlot(5pro-abt-immune.combined, reduction = "umap", group.by = "orig.ident" )
+
+jpeg(file = "B-201_umap_combined.jpg", width = 10, height =4, units = "in", res = 500)
+p1 <- DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident")
+p2 <- DimPlot(immune.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 + p2
+dev.off()
+
+#########################
+# find markers for every cluster compared to all remaining cells, report only the positive
+
+immune.combined.markers <- FindAllMarkers(immune.combined, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_logFC)
+
+write.csv(immune.combined.markers,file="B-CELL201markers.csv",row.names = F)
+
+jpeg(file = "B-pro_gene_cloud2.jpg", width = 15, height =10, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("CD19","CD79A","CD21","CD2","CCR7","CD27","CD5","CD24","JCHAIN"), min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), reduction = "umap")
+dev.off()
+
+#jpeg(file = "abT-ctla4_gene_cloud.jpg", width = 12, height =4, units = "in", res = 500)
+#FeaturePlot(immune.combined, features = c("CTLA4"), split.by = "gruop", min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), reduction = "umap")
+#dev.off()
+
+
+jpeg(file = "B_umap_CLUSTER_spli_nolable.jpg", width = 20, height =8, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = FALSE,combine = TRUE, pt.size = 0.5, split.by = "gruop") + NoLegend()
+dev.off()
+
+cols = cell_type_cols, 
+
+jpeg(file = "B_umap_CLUSTER_lable.jpg", width = 10, height =8, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = TRUE, combine = TRUE,  pt.size = 0.5) + NoLegend()
+dev.off()
+
+cols =cell_type_cols,
+
+#######################################
+save.image('pbmc-B-201.Rdata')
+##################################################
+######分析分群
+immune.combined
+DefaultAssay(immune.combined) <- "RNA"
+
+pdf(file="B_GENE_voilin_spli.pdf",width=6,height=15)
+plots <- VlnPlot(immune.combined, features = c("CCR7","CD24","CD5","CD27","JCHAIN"), split.by = "gruop", 
+    pt.size = 0, combine = FALSE)
+wrap_plots(plots = plots, ncol = 1)
+dev.off()
+###########
+
+#############33333RENAMEABT
+
+new.cluster.ids <- c("NB","NB","MEMB","CD24B","CD24B","PLASMA","CD5B","MEMB","CD5B","MEMB","CD5B","CD24B")
+
+names(new.cluster.ids) <- levels(immune.combined)
+immune.combined <- RenameIdents(immune.combined, new.cluster.ids)
+
+jpeg(file = "5umap_RENAME_B_CLUSTER_nolable.jpg", width =6, height =5, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = FALSE,cols = cell_type_cols,combine = TRUE,  pt.size = 0.5) + NoLegend()
+dev.off()
+
+jpeg(file = "5umap_RENAME_B_CLUSTER_lable.jpg", width = 6, height =5, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = TRUE,cols = cell_type_cols,combine = TRUE,  pt.size = 0.5) + NoLegend()
+dev.off()
+
+
+jpeg(file = "5umap_RENAME_B_CLUSTER_spli_nolable.jpg", width = 18, height =5, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = FALSE,combine = TRUE,cols = cell_type_cols,  pt.size = 0.5, split.by = "gruop") + NoLegend()
+dev.off()
+
+immune.combined.markers <- FindAllMarkers(immune.combined, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_logFC)
+
+write.csv(immune.combined.markers,file="B-CELL201markers-RENAME.csv",row.names = F)
+
+immune.combined$group<-paste0(immune.combined$orig.ident,'_',immune.combined$seurat_clusters)
+cell.prop<-as.data.frame( prop.table(table(immune.combined$group)))
+cell.prop
+
+write.csv(cell.prop,file="cell-Bprop-20-1prop-RENAME.csv",row.names = F)
+统计每群细胞数
+table(Idents(immune.combined))
+
+
+统计每种细胞数
+count<-table(immune.combined$orig.ident)
+
+write.csv(count,file="count-B-20-1-RENAME.csv",row.names = F)
+##############
+
+
+
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_logFC) -> top10
+pdf(file="5-Bmarkergene_allheatmap.pdf",width=7,height=15)
+DoHeatmap(immune.combined, features = top10$gene) + scale_fill_gradientn(colors = c("blue", "white", "red")) + NoLegend()
+
+dev.off()
+
+pdf(file="5-Bmarkergene_allheatmap2.pdf",width=7,height=5)
+DoHeatmap(immune.combined, features = c("CXCR4","CCR7","TSC22D3","ICOSLG","AHI1","IGHD","BACH2","IGHM","EIF1B","PDE4B","RPL13A" ,"RPL23A","RPLP1","RPS14","RPS2","RPL27A","RPLP2","RPL10","RPS15A","RPS4X" ,"ID2","ZBTB32" ,"LMO2" ,"ITM2C","CD1A","PLAC8","CYSTM1","CD24","NEK6","ANXA2","S100A10","ACTG1","JCHAIN","CORO1A","ITGB1","CRIP1","IL7R","CD3E","TRBC1","CTSW","GIMAP7","IL32","S100A4", "NKG7","GNLY","CCL5"
+)) + scale_fill_gradientn(colors = c("blue", "white", "red")) + NoLegend()
+
+dev.off()
+
+
+Figure7 C
+DefaultAssay(immune.combined) <- "integrated"
+DefaultAssay(immune.combined) <- "RNA"
+
+pdf(file="B_GENE_voilin_spli_rename4.pdf",width=6,height=15)
+plots <- VlnPlot(immune.combined, features = c("CCR7","CD24","CD5","CD27","JCHAIN","IGLC"), split.by = "gruop", 
+    pt.size = 0, combine = FALSE)
+wrap_plots(plots = plots, ncol = 1)
+dev.off()
+pdf(file="B_GENE_voilin_spli_rename3.pdf",width=6,height=18)
+plots <- VlnPlot(immune.combined, features = c("CD19","CD79A","CCR7","CD24","CD5","CD27","JCHAIN","IGLC"),cols = cell_type_cols, 
+    pt.size = 0, combine = FALSE)
+wrap_plots(plots = plots, ncol = 1)
+dev.off()
+
+,cols = cell_type_cols
+#######################################
+save.image('pbmc-B-201-RENAME.Rdata')
+##################################################做差异基因
+
+
+#############################################提取b并做差异基因"NB","MEMB","CD24B","PLASMA","CD5B"###########################3
+#NB
+DefaultAssay(immune.combined) <- "RNA"
+NB.ifnb <- subset(immune.combined, idents = "NB")
+Idents(NB.ifnb) <- "gruop"
+NB1 <- FindMarkers(NB.ifnb, ident.1 = "Human", ident.2 = "Pig_con", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+
+head(NB1, n=15)
+
+write.csv(NB1,file="NB1-human-pigcon-DEG.csv")
+NB2 <- FindMarkers(NB.ifnb, ident.1 = "Pig_con", ident.2 = "Pig_t", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+head(NB2, n=15)
+write.csv(NB2,file="NB2-pigcon-pigt-DEG.csv")
+
+#MEMB
+DefaultAssay(immune.combined) <- "RNA"
+MEMB.ifnb <- subset(immune.combined, idents = "MEMB")
+Idents(MEMB.ifnb) <- "gruop"
+MEMB1 <- FindMarkers(MEMB.ifnb, ident.1 = "Human", ident.2 = "Pig_con", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+
+head(MEMB1, n=15)
+
+write.csv(MEMB1,file="MEMB1-human-pigcon-DEG.csv")
+MEMB2 <- FindMarkers(MEMB.ifnb, ident.1 = "Pig_con", ident.2 = "Pig_t", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+head(MEMB2, n=15)
+write.csv(MEMB2,file="MEMB2-pigcon-pigt-DEG.csv")
+
+
+#CD24B
+DefaultAssay(immune.combined) <- "RNA"
+CD24B.ifnb <- subset(immune.combined, idents = "CD24B")
+Idents(CD24B.ifnb) <- "gruop"
+CD24B1 <- FindMarkers(CD24B.ifnb, ident.1 = "Human", ident.2 = "Pig_con", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+
+head(CD24B1, n=15)
+
+write.csv(CD24B1,file="CD24B1-human-pigcon-DEG.csv")
+CD24B2 <- FindMarkers(CD24B.ifnb, ident.1 = "Pig_con", ident.2 = "Pig_t", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+head(CD24B2, n=15)
+write.csv(CD24B2,file="CD24B2-pigcon-pigt-DEG.csv")
+
+
+
+#PLASMA
+DefaultAssay(immune.combined) <- "RNA"
+PLASMA.ifnb <- subset(immune.combined, idents = "PLASMA")
+Idents(PLASMA.ifnb) <- "gruop"
+PLASMA1 <- FindMarkers(PLASMA.ifnb, ident.1 = "Human", ident.2 = "Pig_con", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+
+head(PLASMA1, n=15)
+
+write.csv(PLASMA1,file="PLASMA1-human-pigcon-DEG.csv")
+PLASMA2 <- FindMarkers(PLASMA.ifnb, ident.1 = "Pig_con", ident.2 = "Pig_t", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+head(PLASMA2, n=15)
+write.csv(PLASMA2,file="PLASMA2-pigcon-pigt-DEG.csv")
+
+
+#CD5B
+DefaultAssay(immune.combined) <- "RNA"
+CD5B.ifnb <- subset(immune.combined, idents = "CD5B")
+Idents(CD5B.ifnb) <- "gruop"
+CD5B1 <- FindMarkers(CD5B.ifnb, ident.1 = "Human", ident.2 = "Pig_con", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+
+head(CD5B1, n=15)
+
+write.csv(CD5B1,file="CD5B1-human-pigcon-DEG.csv")
+CD5B2 <- FindMarkers(CD5B.ifnb, ident.1 = "Pig_con", ident.2 = "Pig_t", verbose = FALSE,logfc.threshold =0,min.pct = 0)
+head(CD5B2, n=15)
+write.csv(CD5B2,file="CD5B2-pigcon-pigt-DEG.csv")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
