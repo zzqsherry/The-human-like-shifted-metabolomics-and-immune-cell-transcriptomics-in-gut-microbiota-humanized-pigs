@@ -1,0 +1,43 @@
+ID	C1-1_FDME210249711-1r	C2-1_FDME210249713-1r	C3-1_FDME210249715-1r	C4-1_FDME210249717-1r	C5-1_FDME210249719-1r	C6-1_FDME210249721-1r	H1-1_FDME210249735-1r	H2-1_FDME210249737-1r	H3-1_FDME210249739-1r	H4-1_FDME210249741-1r	T1-1_FDME210249723-1r	T2-1_FDME210249725-1r	T3-1_FDME210249727-1r	T4-1_FDME210249729-1r	T5-1_FDME210249731-1r	T6-1_FDME210249733-1r
+d__Bacteria|p__Actinomycetota|c__Actinomycetes	1318	479	1745	1157	5889	601	35728	3843	1325	6249	2433	4229	941	747	307	176
+d__Bacteria|p__Actinomycetota|c__Coriobacteriia	14698	8286	193	29198	11713	7837	26203	8843	54922	50685	654	2770	9068	2763	1004	682
+d__Bacteria|p__Bacillota|c__Bacilli	1160166	674227	31859	1163983	2768979	1383348	28529	3761	10982	17349	206066	347850	1133400	855917	346152	357069
+d__Bacteria|p__Bacillota|c__Clostridia	383517	143267	71478	206441	225662	228717	2547165	1360701	2690330	3157643	194256	325814	307676	231650	236316	161708
+d__Bacteria|p__Bacillota|c__Erysipelotrichia	5027	8949	6509	2396	15575	4144	43172	6461	6019	35863	14175	4616	2676	10505	13487	5153
+d__Bacteria|p__Bacillota|c__Negativicutes	148406	25927	7875	111629	25993	196212	5501690	20348	70743	475461	23543	360277	191759	80282	38556	10020
+d__Bacteria|p__Bacillota|c__Tissierellia	1	10	17	9	4	8	137	5	31	32	6	0.0	0.0	2	0.0	12
+d__Bacteria|p__Bacteroidota|c__Bacteroidia	2294609	282403	69233	952805	68766	2029314	648346	7245968	5063596	3965480	1266897	5140077	2539749	1466021	1562011	921892
+d__Bacteria|p__Bacteroidota|c__Chitinophagia	0.0	0.0	2	0.0	0.0	0.0	26	1	0.0	90	0.0	0.0	0.0	1	0.0	0.0
+d__Bacteria|p__Bacteroidota|c__Cytophagia	0.0	0.0	7	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Bacteroidota|c__Flavobacteriia	12	16	28	15	1	20	116	1294	127	17	32	5	6	11	4	4
+d__Bacteria|p__Bacteroidota|c__Sphingobacteriia	0.0	0.0	4	0.0	0.0	3	23	0.0	0.0	0.0	1	0.0	1	0.0	0.0	0.0
+d__Bacteria|p__Campylobacterota|c__Epsilonproteobacteria	5774	683	255	6497	782	8804	1832	97	349	279	4981	8592	4324	17998	39220	1617
+d__Bacteria|p__Candidatus Saccharibacteria|c__Candidatus Nanoperiomorbia	0.0	0.0	0.0	0.0	0.0	0.0	120	0.0	1	0.0	1	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Candidatus Saccharibacteria|c__Candidatus Nanosyncoccalia	0.0	0.0	1	1	2	1	14	0.0	6	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Candidatus Saccharibacteria|c__Candidatus Saccharimonadia	0.0	0.0	0.0	0.0	0.0	0.0	295	1	1	2	0.0	0.0	1	1	0.0	0.0
+d__Bacteria|p__Chlamydiota|c__Chlamydiia	34	106	12	5240	17903	8102	49	360	149	186	7617	476	942	574	2729	37797
+d__Bacteria|p__Chloroflexota|c__Anaerolineae	0.0	0.0	0.0	0.0	0.0	0.0	26	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Chloroflexota|c__Dehalococcoidia	0.0	0.0	1	2	3	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	3	37
+d__Bacteria|p__Chloroflexota|c__Ktedonobacteria	1	2	7	0.0	0.0	2	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Cyanobacteriota|c__Cyanophyceae	0.0	0.0	1	0.0	0.0	1	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Deferribacterota|c__Deferribacteres	0.0	0.0	0.0	16	2	0.0	0.0	0.0	0.0	0.0	1	3	0.0	0.0	0.0	0.0
+d__Bacteria|p__Deinococcota|c__Deinococci	0.0	1	17	1	0.0	0.0	6	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Elusimicrobiota|c__Elusimicrobia	9	19	2	96	1	16	0.0	0.0	0.0	0.0	153	23	4	0.0	408	189
+d__Bacteria|p__Fibrobacterota|c__Fibrobacteria	14438	6005	1184	62380	5387	27776	1	1	0.0	1	56495	8775	11993	113003	6489	38977
+d__Bacteria|p__Fusobacteriota|c__Fusobacteriia	23	15	5	7	4	8	1414	374	0.0	2	18	10	5	28	12	9
+d__Bacteria|p__Lentisphaerota|c__Lentisphaeria	3	0.0	0.0	5	0.0	0.0	0.0	0.0	0.0	0.0	39	8	2	3	2	28
+d__Bacteria|p__Mycoplasmatota|c__Mollicutes	16	0.0	0.0	83	239	29	0.0	0.0	2	0.0	37	267	4371	1579	323	12
+d__Bacteria|p__Myxococcota|c__Myxococcia	6	11	2	7	28	4	1	0.0	0.0	0.0	20	13	22	6	6	5
+d__Bacteria|p__Planctomycetota|c__Planctomycetia	0.0	0.0	0.0	0.0	0.0	0.0	1	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Pseudomonadota|c__Alphaproteobacteria	843	3776	12896	2565	515	436	9430	47	32	522	150	74	225	599	637	1029
+d__Bacteria|p__Pseudomonadota|c__Betaproteobacteria	149	133	296	268	1766	260	2536	3279	11881	3363	8958	2485	353	775	3827	5140
+d__Bacteria|p__Pseudomonadota|c__Gammaproteobacteria	80088	204772	12856	170250	774564	37851	354540	101710	25913	20922	311780	151086	293161	110473	39876	33433
+d__Bacteria|p__Pseudomonadota|c__Hydrogenophilia	0.0	0.0	1	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Spirochaetota|c__Spirochaetia	86366	11943	1677	23456	14301	27860	12	3	8	6	28599	11714	6665	58335	35041	51946
+d__Bacteria|p__Synergistota|c__Synergistia	20	168	10	19	157	5	8	0.0	583	255	4	4	15	20	92	221
+d__Bacteria|p__Thermodesulfobacteriota|c__Desulfobulbia	0.0	0.0	0.0	0.0	0.0	0.0	26	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Thermodesulfobacteriota|c__Desulfovibrionia	48143	46702	390	76750	406	16208	49395	28004	36323	480	7197	10867	7178	31338	31903	92647
+d__Bacteria|p__Thermodesulfobacteriota|c__Desulfuromonadia	0.0	0.0	0.0	0.0	0.0	0.0	1	0.0	1	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Thermodesulfobacteriota|c__Syntrophorhabdia	1	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Thermomicrobiota|c__Thermomicrobia	0.0	0.0	2	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0	0.0
+d__Bacteria|p__Verrucomicrobiota|c__Verrucomicrobiae	1	1	34	1	0.0	0.0	2	440132	37541	18	44	11	12	11	27	19
