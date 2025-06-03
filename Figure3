@@ -1,0 +1,11 @@
+Figure3 A
+library(gplots)
+ge <-read.csv("zz1g-zzmug-deg-for-heatmap-1.csv",sep=",")
+row.names(ge) <-ge$GeneNames
+ge <-ge[,-1]
+ge=ge+1
+ge_matrix <-data.matrix(ge)
+heatmap.2(log10(ge_matrix),col=bluered(100),Colv=NA,labRow=NULL,srtRow=NULL,key=TRUE,symkey=FALSE,density.info="none", trace="none", cexCol=0.8)
+
+Figure3 B
+用在线工具画图http://www.ehbio.com/ImageGP/index.php/Home/Index/PHeatmap.html
