@@ -1,0 +1,230 @@
+Figure2 A
+options(stringsAsFactors = FALSE)
+library(ggthemes)
+library(ggplot2)
+library(ggsci)
+library(ggsignif)
+library(ggpubr)
+library(openxlsx)
+library(vegan)
+library(reshape2)
+groups <- read.table("metadata.txt",sep = '\t',header = T,colClasses = c("character"))
+
+abundance=read.csv('Relative_Abundence/Kraken2/species_kraken2_rela_abundence.csv',
+row.names = 1,check.names = F)
+
+n=1
+abundance=abundance[,apply(abundance,2, function(x) sum(x>0.0001) > n)]
+
+all=abundance
+##物种丰富度 Richness 指数
+Richness <- rowSums(all > 0)
+#Shannon 指数
+Shannon <- diversity(all, index = 'shannon')
+#Shannon 均匀度（Pielou 均匀度）
+Pielou <- Shannon / log(Richness, exp(1))
+#Gini-Simpson 指数（我们平时常用的 Simpson 指数即为 Gini-Simpson 指数）
+Simpson <- diversity(all, index = 'simpson')
+###α多样性
+a_diversity <- data.frame(Richness,Shannon,Pielou,Simpson)
+
+a_diversity=merge(a_diversity,groups,by.x = 'row.names',by.y = "sample_id",all.x = T)
+
+a_diversity$group=factor(a_diversity$group,levels = c("H","C_wk27","T_wk27"))
+
+alpha_plotdata=melt(a_diversity,id=c("Row.names","group"),variable.name = 'alpha_diversity',value.name = 'value')
+###箱线图
+
+my_comparisons <- list( c("H","C_wk27"),
+
+                    c("C_wk27","T_wk27"),
+                    c("H","T_wk27")
+)
+library(cowplot)
+p1 <- ggplot(alpha_plotdata, aes(x = group, y = value))+
+#geom_violin(width=1) +
+geom_boxplot(outlier.alpha = 0,notch = F,width=0.5)+
+geom_jitter(aes(color = group), width = 0.2,size=1)+
+scale_color_manual(values =c("#1f78b4","#33a02c","#e31a1c"))+
+stat_compare_means(comparisons = my_comparisons,label = "p.signif",method = "wilcox.test")+
+theme_bw()+ylab("value")+xlab("")+
+theme(plot.title = element_text(size = 20,hjust = 0.5),
+axis.text.x=element_text(colour="black",size=9,hjust = 0.5, vjust = 0.5),
+axis.text.y=element_text(colour = "black",size = 10),
+legend.text = element_text(colour = "black",size = 13),
+legend.title = element_text(size = 15,colour = "black"),
+axis.title.y = element_text(size = 18),
+axis.title.x = element_text(size = 18))+
+facet_wrap(~alpha_diversity , scales = 'free', ncol = 2)
+
+p1
+
+ggsave(plot = p1, width=7.2, height = 7.7, file = "result_kraken2/2.1α多样性检验/α多样性.pdf", device = cairo_pdf)
+
+Figure2 B
+options(stringsAsFactors = F)
+library(reshape2)
+library(psych)
+library(vegan)
+library(ggplot2)
+library(ggsci)
+library(ggsignif)
+library(ggpubr)
+library(openxlsx)
+library(picante)
+library(ape)
+library(ggthemes)
+library(openxlsx)
+library(ggbeeswarm)
+library(cowplot)
+
+#----------计算Bray-Curtis距离----------#
+Species_Abundence=read.csv('Relative_Abundence/kraken2/species_kraken2_rela_abundence.csv',row.names = 1,check.names = F)
+
+n=1
+Species_Abundence=Species_Abundence[,apply(Species_Abundence,2, function(x) sum(x>0.0001) > n)]
+
+Species_Abundence_matrix=as.matrix(Species_Abundence)
+
+Species_BC_distance <- vegdist(Species_Abundence_matrix, method = 'bray')
+
+Species_BC_dist_matrix=as.matrix(Species_BC_distance)
+BC_dist=as.data.frame(Species_BC_dist_matrix)
+#----------计算Bray-Curtis距离----------#
+
+#----------直接导入距离----------#
+#BC_dist=read.table('Relative_Abundence/kraken2_0.1/Weighted_unifrac_merged_mpa3_profiles.tsv',row.names = 1,check.names = F)
+#----------直接导入距离----------#
+
+rownames(BC_dist)=limma::strsplit2(rownames(BC_dist),'\.')[,1]
+colnames(BC_dist)=limma::strsplit2(colnames(BC_dist),'\.')[,1]
+
+groups <- read.table("metadata.txt",sep = '\t',header = T,colClasses = c("character"))
+
+BC_dist=BC_dist[groups$sample_id,groups$sample_id]
+###猪与两个人的平均距离
+
+#对照组与人
+C_wk27_H_dist=data.frame(rowMeans(BC_dist[groups$sample_id[groups$group=="C_wk27"],groups$sample_id[groups$group=="H"]]))
+
+colnames(C_wk27_H_dist)="BC_dist"
+#处理组与人
+T_wk27_H_dist=data.frame(rowMeans(BC_dist[groups$sample_id[groups$group=="T_wk27"],groups$sample_id[groups$group=="H"]]))
+
+colnames(T_wk27_H_dist)="BC_dist"
+
+plot_dist=rbind(C_wk27_H_dist,T_wk27_H_dist)
+plot_dist=merge(plot_dist,groups,by.x = "row.names",by.y="sample_id",all.x = T)
+
+plot_dist$group=factor(plot_dist$group,levels = c("C_wk27","T_wk27"))
+
+my_comparisons<- list(
+c("C_wk27","T_wk27")
+)
+
+p1 <- ggplot(plot_dist,aes(x=group,y=BC_dist))+
+geom_boxplot(outlier.alpha = 0,width=0.5)+
+geom_jitter(aes(color = group), width = 0.2)+
+scale_color_manual(values =c("#33a02c","#1f78b4"))+
+labs(title = "Bray-Curtis distance to H")+ylab("Distance")+
+stat_compare_means(comparisons = my_comparisons,method = "wilcox.test")+
+theme_bw()+
+theme(plot.title = element_text(size = 15,hjust = 0.5),
+axis.text.x=element_text(colour="black",size=9,hjust = 0.5, vjust = 0.5),
+axis.text.y=element_text(colour = "black",size = 10),
+legend.text = element_text(colour = "black",size = 13),
+legend.title = element_text(size = 15,colour = "black"),
+axis.title.y = element_text(size = 15),
+axis.title.x = element_text(size = 15))
+
+ggsave(plot = p1,width=5,height = 5 ,file = "result_kraken2/2.2β多样性检验/与人肠道微生物距离.pdf", device = cairo_pdf)
+
+Figure2 C
+options(stringsAsFactors = FALSE)
+library(reshape2)
+library(ggsci)
+
+####取相对丰度 TOP n 的菌
+#载入分组文件
+groups <- read.table("metadata.txt",sep = '\t',header = T,colClasses = c("character"))
+
+rownames(groups)=groups$sample_id
+
+abundance=read.csv("Relative_Abundence/kraken2/phylum_kraken2_rela_abundence.csv",row.names = 1,check.names = F)
+colnames(abundance) <- gsub(".+\|p__", "", colnames(abundance))
+abundance=abundance[groups$sample_id,]
+
+abundance <- data.frame(t(abundance))
+
+#门水平TOP10
+#肠道
+f.abundance=abundance
+all_abu <- apply(f.abundance,1,sum)
+f.abundance <- cbind(f.abundance,all_abu)
+f.abundance <- f.abundance[order(f.abundance[,"all_abu"],decreasing = T),]
+f.abundance <- subset(f.abundance, select = -all_abu)
+#f.abundance<-f.abundance[grep('p__',rownames(f.abundance),value = F),]
+f.abundance <- f.abundance[1:10,]
+
+f.abundance <- t(f.abundance)
+all_abu <- apply(f.abundance,1,sum)
+Others <- 1-round(all_abu,14)
+f.abundance <- cbind(f.abundance,Others)
+f.abundance=as.data.frame(t(f.abundance))
+
+f.abundance=f.abundance[nrow(f.abundance):1,]
+
+f.abundance_Gut=f.abundance[,c(groups$sample_id[groups$group=="H"][order(as.numeric(f.abundance[nrow(f.abundance),
+groups$sample_id[groups$group=="H"]]),decreasing = T)],
+groups$sample_id[groups$group=="C_wk27"][order(as.numeric(f.abundance[nrow(f.abundance),
+groups$sample_id[groups$group=="C_wk27"]]),decreasing = T)],
+groups$sample_id[groups$group=="T_wk27"][order(as.numeric(f.abundance[nrow(f.abundance),
+groups$sample_id[groups$group=="T_wk27"]]),decreasing = T)])]
+
+taxon_Gut <- melt(as.matrix(f.abundance_Gut))
+colnames(taxon_Gut) <- c("Phylum","group","Relativer_abundence")
+
+taxon_Gut$Phylum=factor(taxon_Gut$Phylum,levels = taxon_Gut$Phylum[1:11])
+
+taxon_Gut=merge(taxon_Gut,groups,by.x="group",by.y = "sample_id",all.x = T)
+
+taxon_Gut$group.y=factor(taxon_Gut$group.y,levels = c("H","C_wk27","T_wk27"))
+
+library(ggplot2)
+library(ggalluvial)
+
+p <- ggplot(data = taxon_Gut,aes(x = group, y = Relativer_abundence, alluvium = Phylum, stratum = Phylum))+
+#geom_alluvium(aes(fill = phylum),alpha = .1,width = 0.6) +
+#geom_stratum(aes(fill = phylum,color=phylum),width = 0.6)+
+geom_bar(aes(fill = Phylum),stat ="identity" ,width = 1) +
+facet_grid(~group.y, scales = 'free_x', space="free_x") +
+ylab(label = "Relative Abundance") + xlab(label = "")+
+scale_fill_manual(values=c('#7f7f7f',
+'#cab2d6','#6a3d9a',
+'#fdbf6f','#ff7f00',
+'#fb9a99','#e31a1c',
+'#b2df8a','#33a02c',
+'#a6cee3','#1f78b4'))+
+scale_color_manual(values=c('#7f7f7f',
+'#cab2d6','#6a3d9a',
+'#fdbf6f','#ff7f00',
+'#fb9a99','#e31a1c',
+'#b2df8a','#33a02c',
+'#a6cee3','#1f78b4'))+
+theme_bw()+
+theme(plot.title=element_text(size=rel( 1.5),hjust= 0.5),panel.grid=element_blank()) +
+
+theme(panel.border = element_blank()) +
+theme(panel.background=element_rect(fill='transparent',
+color='black'),plot.margin = unit(c(3,5,1,1),"mm"))+
+theme(axis.text.x=element_text(colour="black",size=9,angle = 90,hjust = 0.5, vjust = 0.5),
+axis.text.y=element_text(colour = "black",size = 10),
+#axis.ticks.x = element_blank(),
+axis.title.y = element_text(size = 18,margin = unit(c(0,1,0,1),"lines"))) +
+#theme(axis.line = element_line(colour = "black"))+
+theme(legend.text = element_text(colour = "black",size = 10)) +
+theme(legend.title = element_text(size = 15,colour = "black"))+
+theme(legend.key.size=unit(10,'pt'))+scale_y_continuous(limits = c(0,1.001),expand = c(0,0),labels = scales::percent)
+
+p
+ggsave(plot = p,width=7,height = 3.4 ,file = "result_kraken2/1.1物种组成/门水平.pdf", device = cairo_pdf)
