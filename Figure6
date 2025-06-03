@@ -1,0 +1,247 @@
+Figure6 A-B
+/public/software/anaconda3/bin/R
+library(dplyr)
+library(Seurat)
+library(patchwork)
+library(ggplot2)
+library(cowplot)
+load("pbmc-MELOID-rename-201.Rdata")
+setwd("/public2/10xgenomic/PIG_colon/result/pbmc-2/20221226_pbmc")
+
+###########提取Myeloid cells细胞
+rds<-subset(immune.combined,idents=c('CD14MO', 'CD16MO', 'DC'))
+
+
+################
+DefaultAssay(rds) <- "RNA"
+ifnb.list <- SplitObject(rds, split.by ="orig.ident")
+
+
+ifnb.list <- lapply(X = ifnb.list, FUN = function(x) {
+    x <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
+    x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+})
+
+features <- SelectIntegrationFeatures(object.list = ifnb.list)
+
+immune.anchors <- FindIntegrationAnchors(object.list = ifnb.list, anchor.features = features)
+################
+
+######后续和前面分群一样了
+# this command creates an 'integrated' data assay
+immune.combined <- IntegrateData(anchorset = immune.anchors)
+#过滤后质量
+pdf(file="abT-VlnPlot_qc.pdf",width=10,height=5)
+VlnPlot(immune.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+dev.off()
+
+# specify that we will perform downstream analysis on the corrected data note that the
+# original unmodified data still resides in the 'RNA' assay
+DefaultAssay(immune.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+immune.combined <- RunPCA(immune.combined, npcs =20, verbose = FALSE)
+immune.combined<- RunUMAP(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindClusters(immune.combined, resolution = 1)
+
+##################分群
+####DimPlot(7pro-Myeloid-immune.combined, reduction = "umap", group.by = "orig.ident" )
+
+jpeg(file = "7pro-Myeloid-201_umap_combined.jpg", width = 10, height =4, units = "in", res = 500)
+p1 <- DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident")
+p2 <- DimPlot(immune.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 + p2
+dev.off()
+
+#########################
+# find markers for every cluster compared to all remaining cells, report only the positive
+
+immune.combined.markers <- FindAllMarkers(immune.combined, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_logFC)
+
+write.csv(immune.combined.markers,file="7pro-Myeloid-CELL201markers.csv",row.names = F)
+##################################
+
+
+jpeg(file = "7pro-Myeloid-pro_gene_cloud2.jpg", width = 15, height =10, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("CD14","S100A8","C5AR1","S100A9","FCER1A","ITGB7","HLA-DQB1","CD1C","FCGR3A","LYZ","CLEC4F","VEGFB","PLAC8"), min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), reduction = "umap")
+dev.off()
+
+jpeg(file = "7pro-Myeloid-CD14_gene_cloud.jpg", width = 12, height =4, units = "in", res = 500)
+FeaturePlot(immune.combined, features = c("CD14"), split.by = "gruop", min.cutoff = 0, max.cutoff = 5, cols = c("grey", "red"), reduction = "umap")
+dev.off()
+
+pdf(file="7pro-Myeloid_FCGR3A_voilin_spli.pdf",width=6,height=5)
+plots <- VlnPlot(immune.combined, features = c("FCGR3A"), split.by = "gruop", 
+    pt.size = 0, combine = FALSE)
+wrap_plots(plots = plots, ncol = 1)
+dev.off()
+
+
+
+去掉小群体的9 
+
+rds<-subset(immune.combined,idents=c('9'), invert = TRUE)
+
+############
+
+DefaultAssay(rds) <- "RNA"
+ifnb.list <- SplitObject(rds, split.by ="orig.ident")
+
+
+ifnb.list <- lapply(X = ifnb.list, FUN = function(x) {
+    x <- NormalizeData(x, normalization.method = "LogNormalize", scale.factor = 10000)
+    x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)
+})
+
+features <- SelectIntegrationFeatures(object.list = ifnb.list)
+
+immune.anchors <- FindIntegrationAnchors(object.list = ifnb.list, anchor.features = features)
+
+######后续和前面分群一样了
+# this command creates an 'integrated' data assay
+immune.combined <- IntegrateData(anchorset = immune.anchors)
+#过滤后质量
+#pdf(file="2VlnPlot_qc_DEL1.pdf",width=10,height=5)
+#VlnPlot(immune.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+#dev.off()
+
+pdf(file="2VlnPlot_qc_pbmch2.pdf",width=12,height=10)
+VlnPlot(immune.combined, features = c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo"), ncol = 3)
+dev.off()
+
+# specify that we will perform downstream analysis on the corrected data note that the
+# original unmodified data still resides in the 'RNA' assay
+DefaultAssay(immune.combined) <- "integrated"
+
+# Run the standard workflow for visualization and clustering
+immune.combined <- ScaleData(immune.combined, verbose = FALSE)
+immune.combined <- RunPCA(immune.combined, npcs =20, verbose = FALSE)
+immune.combined<- RunUMAP(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindNeighbors(immune.combined, reduction = "pca", dims = 1:20)
+immune.combined <- FindClusters(immune.combined, resolution = 0.5)
+
+##################分群
+####DimPlot(2-delred-immuecombined-20-1, reduction = "umap", group.by = "orig.ident" )
+#pdf(file="8pro-Myeloidumap_combinedDELred20-1.pdf",width=12,height=5)
+ jpeg(file = "8pro-Myeloidumap_combinedDELred20-1.jpg", width = 12, height =5, units = "in", res = 500)
+p1 <- DimPlot(immune.combined, reduction = "umap", group.by = "orig.ident")
+p2 <- DimPlot(immune.combined, reduction = "umap", label = TRUE, repel = TRUE)
+p1 + p2
+dev.off()
+
+
+
+ jpeg(file = "8pro-Myeloidumap_combinedDELred20-1_spli.jpg", width = 15, height =5, units = "in", res = 500)
+DimPlot(immune.combined, reduction = "umap", split.by = "orig.ident")
+dev.off()
+
+
+jpeg(file = "8pro-Myeloidumap_combinedDELred20-1_spligruop.jpg", width = 15, height =5, units = "in", res = 500)
+DimPlot(immune.combined, reduction = "umap", split.by = "gruop")
+dev.off()
+
+
+jpeg(file = "8pro-Myeloid-pro_gene_cloud2.jpg", width = 15, height =10, units = "in", res = 500)
+
+FeaturePlot(immune.combined, features = c("CD14","S100A8","C5AR1","S100A9","FCER1A","ITGB7","HLA-DQB1","CD1C","FCGR3A","LYZ","CLEC4F","VEGFB","PLAC8"), min.cutoff = 0, max.cutoff = 3, cols = c("grey", "red"), reduction = "umap")
+dev.off()
+
+
+
+jpeg(file = "8pro-Myeloid-CD14_gene_cloud.jpg", width = 12, height =4, units = "in", res = 500)
+FeaturePlot(immune.combined, features = c("CD14"), split.by = "gruop", min.cutoff = 0, max.cutoff = 5, cols = c("grey", "red"), reduction = "umap")
+dev.off()
+
+pdf(file="8pro-Myeloid_FCGR3A_voilin_spli.pdf",width=6,height=5)
+plots <- VlnPlot(immune.combined, features = c("FCGR3A"), split.by = "gruop", 
+    pt.size = 0, combine = FALSE)
+wrap_plots(plots = plots, ncol = 1)
+dev.off()
+
+pdf(file="8pro-Myeloid_CD14_voilin_spli.pdf",width=6,height=5)
+plots <- VlnPlot(immune.combined, features = c("CD14"), split.by = "gruop", 
+    pt.size = 0, combine = FALSE)
+wrap_plots(plots = plots, ncol = 1)
+dev.off()
+###################################33
+SAVE
+save.image('pbmc-MELOID-rename-201.Rdata')
+#########################
+
+#############33333RENAMEABT
+
+new.cluster.ids <- c("CD14","CD14","CD14","CD14","CD16","monoDC","CD14","CD16","pDC","CD14","CD16","CD16","CD14","CD14","pDC")
+
+names(new.cluster.ids) <- levels(immune.combined)
+immune.combined <- RenameIdents(immune.combined, new.cluster.ids)
+
+jpeg(file = "9-MEL-umap_RENAMEABT_CLUSTER_nolable.jpg", width = 5, height =4, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = FALSE,cols = cell_type_cols,combine = TRUE,  pt.size = 0.5) + NoLegend()
+dev.off()
+
+jpeg(file = "9-MEL-RENAMEABT_CLUSTER_lable.jpg", width = 5, height =4, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = TRUE,cols = cell_type_cols,combine = TRUE,  pt.size = 0.5) + NoLegend()
+dev.off()
+
+
+jpeg(file = "9-MEL-RENAMEABT_CLUSTER_spli_nolable.jpg", width = 10, height =4, units = "in", res = 1000)
+DimPlot(immune.combined, reduction = "umap", label = FALSE,combine = TRUE,cols = cell_type_cols,  pt.size = 0.5, split.by = "gruop") + NoLegend()
+dev.off()
+
+
+immune.combined$group<-paste0(immune.combined$orig.ident,'_',immune.combined$seurat_clusters)
+cell.prop<-as.data.frame( prop.table(table(immune.combined$group)))
+cell.prop
+
+write.csv(cell.prop,file="cell-meloid-prop-20-1prop.csv",row.names = F)
+统计每群细胞数
+table(Idents(immune.combined))
+
+
+统计每种细胞数
+count<-table(immune.combined$orig.ident)
+
+write.csv(count,file="count-meloid-20-1.csv",row.names = F)
+##############
+
+#########################
+# find markers for every cluster compared to all remaining cells, report only the positive
+
+immune.combined.markers <- FindAllMarkers(immune.combined, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 2, wt = avg_logFC)
+
+write.csv(immune.combined.markers,file="9-Myeloid-rename-CELL201markers.csv",row.names = F)
+##################################
+
+
+immune.combined.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_logFC) -> top10
+pdf(file="9-MELOIDTmarkergene_allheatmap.pdf",width=7,height=15)
+DoHeatmap(immune.combined, features = top10$gene) + scale_fill_gradientn(colors = c("blue", "white", "red")) + NoLegend()
+
+dev.off()
+
+
+#######################################
+save.image('pbmc-meloid-rename-201.Rdata')
+##################################################
+
+
+Figure6 D-F
+通过http://www.ehbio.com/ImageGP/index.php/Home/Index/PHeatmap.html画图
+
+
+
+
+
+
+
